@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento</title>
+    <link rel="stylesheet" href="style3.css">
+</head>
+<body>
+
+     <!-- Imagem adicionada aqui -->
+     <div class="logo">
+        <img src="templates/PALLOZO.png" alt="Logo Pallozo" >
+    </div>
+
+    <div class="container">
+        <h1>Agendamento de Serviços</h1>
+
+        <form id="agendamento-form">
+            <div class="form-group">
+                <label for="cliente">Nome do Cliente:</label>
+                <input type="text" id="cliente" name="cliente" placeholder="Digite seu nome" required>
+            </div>
+            <div class="form-group">
+                <label for="data">Data:</label>
+                <input type="date" id="data" name="data" required>
+            </div>
+            <div class="form-group">
+                <label for="hora">Horário:</label>
+                <select id="hora" name="hora" required>
+                    <option value="" disabled selected>Selecione o horário</option>
+                </select>
+                <small id="disponibilidade-msg" class="error-msg"></small>
+            </div>
+            <div class="form-group">
+                <label for="servico">Serviço:</label>
+                <select id="servico" name="servico" required>
+                    <option value="" disabled selected>Selecione o serviço</option>
+                    <option value="1">Corte de cabelo</option>
+                    <option value="2">Manicure</option>
+                    <option value="3">Pedicure</option>
+                    <option value="4">Limpeza de pele</option>
+                    <option value="5">Pintura de cabelo</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="submit" id="submit-btn">Confirmar Agendamento</button>
+            </div>
+        </form>
+        <div id="mensagem-confirmacao" style="display: none; margin-top: 20px;">
+            <h3>Agendamento Confirmado!</h3>
+            <p id="detalhes-confirmacao"></p>
+        </div>
+    </div>
+
+    <script>
+        // Simulação de horários indisponíveis
+        const horariosIndisponiveis = [
+            { data: "2024-10-10", hora: "08:00:00" },
+            { data: "2024-10-10", hora: "11:00:00" },
+        ];
+
+        const horaSelect = document.getElementById("hora");
+        const dataInput = document.getElementById("data");
+        const disponibilidadeMsg = document.getElementById("disponibilidade-msg");
+        const submitBtn = document.getElementById("submit-btn");
+        const agendamentoForm = document.getElementById("agendamento-form");
+        const mensagemConfirmacao = document.getElementById("mensagem-confirmacao");
+        const detalhesConfirmacao = document.getElementById("detalhes-confirmacao");
+
+        // Função para carregar horários
+        function carregarHorarios() {
+            horaSelect.innerHTML = '<option value="" disabled selected>Selecione o horário</option>';
+            const horarios = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00"];
+            const dataSelecionada = dataInput.value;
+
+            horarios.forEach(horario => {
+                const option = document.createElement("option");
+                option.value = horario;
+
+                const indisponivel = horariosIndisponiveis.some(
+                    h => h.data === dataSelecionada && h.hora === `${horario}:00`
+                );
+
+                if (indisponivel) {
+                    option.disabled = true;
+                    option.textContent = `${horario} (Indisponível)`;
+                } else {
+                    option.textContent = horario;
+                }
+
+                horaSelect.appendChild(option);
+            });
+
+            disponibilidadeMsg.textContent = "";
+        }
+
+        // Verifica disponibilidade ao selecionar
+        horaSelect.addEventListener("change", () => {
+            const dataSelecionada = dataInput.value;
+            const horarioSelecionado = horaSelect.value;
+
+            const indisponivel = horariosIndisponiveis.some(
+                h => h.data === dataSelecionada && h.hora === `${horarioSelecionado}:00`
+            );
+
+            if (indisponivel) {
+                disponibilidadeMsg.textContent = "Horário indisponível. Por favor, escolha outro.";
+                disponibilidadeMsg.style.color = "red";
+                submitBtn.disabled = true;
+            } else {
+                disponibilidadeMsg.textContent = "Horário disponível!";
+                disponibilidadeMsg.style.color = "green";
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Recarregar horários ao alterar a data
+        dataInput.addEventListener("change", carregarHorarios);
+
+        // Exibir mensagem de confirmação ao submeter o formulário
+        agendamentoForm.addEventListener("submit", (event) => {
+            event.preventDefault(); // Evita o envio padrão do formulário
+
+            // Capturar os dados do formulário
+            const cliente = document.getElementById("cliente").value;
+            const data = document.getElementById("data").value;
+            const hora = document.getElementById("hora").value;
+            const servico = document.getElementById("servico").options[document.getElementById("servico").selectedIndex].text;
+
+
+              // Salvar no Local Storage
+             const agendamento = { cliente, data, hora, servico };
+            localStorage.setItem("agendamentoConfirmado", JSON.stringify(agendamento));
+
+            // Exibir mensagem de confirmação
+            mensagemConfirmacao.style.display = "block";
+            detalhesConfirmacao.textContent = `Obrigado, ${cliente}! Seu agendamento para ${servico} no dia ${data} às ${hora} foi confirmado.`;
+
+            // Adicionar horário como indisponível
+            horariosIndisponiveis.push({ data: data, hora: `${hora}:00` });
+
+            // Atualizar os horários disponíveis
+            carregarHorarios();
+        });
+    </script>
+</body>
+</html>
